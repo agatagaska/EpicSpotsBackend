@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using EpicSpots.Data;
+using Microsoft.AspNetCore.Http;
 
 namespace EpicSpots.Controllers
 {
@@ -89,8 +90,6 @@ namespace EpicSpots.Controllers
             return Ok(rating);
         }
 
-
-
         [Authorize]
         [HttpPost("create")]
         public async Task<IActionResult> CreateCampsite([FromBody] CampsiteCreateDTO campsiteCreateDTO)
@@ -112,7 +111,6 @@ namespace EpicSpots.Controllers
                 return BadRequest("Invalid User ID format");
             }
 
-            // Verify Amenity IDs
             foreach (var amenityId in campsiteCreateDTO.Amenities)
             {
                 if (!await _context.Amenities.AnyAsync(a => a.Id == amenityId))
@@ -132,79 +130,15 @@ namespace EpicSpots.Controllers
                 return StatusCode(500, ModelState);
             }
 
-            return CreatedAtAction(nameof(GetCampsite), new { campsiteId = campsite.Id }, campsite);
-        }
-
-
-
-
-        [HttpPut("{campId}")]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(404)]
-        public IActionResult UpdateCampsite(int campId, [FromQuery] int ownerId, [FromQuery] List<int> amenityIds, [FromBody] CampsiteDTO updatedCampsite)
-        {
-            if (updatedCampsite == null)
-                return BadRequest(ModelState);
-
-            if (campId != updatedCampsite.Id)
-                return BadRequest(ModelState);
-
-            if (!_campsiteRepository.CampsiteExist(campId))
-                return NotFound();
-
-            if (!ModelState.IsValid)
-                return BadRequest();
-
-            var campsiteMap = _mapper.Map<Campsite>(updatedCampsite);
-
-            if (!_campsiteRepository.UpdateCampsite(ownerId, amenityIds, campsiteMap))
-            {
-                ModelState.AddModelError("", "Something went wrong updating owner");
-                return StatusCode(500, ModelState);
-            }
-
-            return NoContent();
-        }
-
-        [HttpDelete("{campId}")]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(404)]
-        public IActionResult DeleteCampsite(int campId)
-        {
-            if (!_campsiteRepository.CampsiteExist(campId))
-            {
-                return NotFound();
-            }
-
-            var reviewsToDelete = _reviewRepository.GetReviewsOfACampsite(campId);
-            var campsiteToDelete = _campsiteRepository.GetCampsite(campId);
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            if (!_reviewRepository.DeleteReviews(reviewsToDelete.ToList()))
-            {
-                ModelState.AddModelError("", "Something went wrong when deleting reviews");
-            }
-
-            if (!_campsiteRepository.DeleteCampsite(campsiteToDelete))
-            {
-                ModelState.AddModelError("", "Something went wrong deleting campsite");
-            }
-
-            return NoContent();
+            return CreatedAtAction(nameof(GetCampsite), new { campId = campsite.Id }, campsite);
         }
 
         [HttpGet("search")]
-        public async Task<IActionResult> SearchCampsites([FromQuery] string? location, [FromQuery] DateTime? checkin, [FromQuery] DateTime? checkout)
+        public async Task<IActionResult> SearchCampsites([FromQuery] string? location, [FromQuery] DateTime? checkin, [FromQuery] DateTime? checkout, [FromQuery] decimal? maxPrice)
         {
-            var campsites = await _campsiteRepository.SearchCampsitesWithBase64ImagesAsync(location, checkin, checkout);
+            var campsites = await _campsiteRepository.SearchCampsitesWithBase64ImagesAsync(location, checkin, checkout, maxPrice);
             return Ok(campsites);
         }
-
-
 
     }
 }

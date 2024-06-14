@@ -72,10 +72,20 @@ namespace EpicSpots.Repository
         public IEnumerable<Booking> GetUserBookings(int userId)
         {
             return _context.Bookings
-                           .Include(b => b.Campsite) // Include the related Campsite entity
+                           .Include(b => b.Campsite) 
                            .Where(b => b.UserId == userId)
                            .ToList();
         }
+
+        public IEnumerable<Campsite> GetCampsitesByOwner(int ownerId)
+        {
+            return _context.Campsites
+                           .Include(c => c.CampsiteAmenities)
+                           .ThenInclude(ca => ca.Amenity)
+                           .Where(c => c.OwnerId == ownerId)
+                           .ToList();
+        }
+
 
     }
 }

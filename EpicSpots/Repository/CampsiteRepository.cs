@@ -73,18 +73,6 @@ namespace EpicSpots.Repository
             return amenityNames.Any() ? string.Join(", ", amenityNames) : "No amenities";
         }
 
-        public bool UpdateCampsite(int ownerId, List<int> amenitiesIds, Campsite campsite)
-        {
-            _context.Update(campsite);
-            return Save();
-        }
-
-        public bool DeleteCampsite(Campsite campsite)
-        {
-            _context.Campsites.Remove(campsite);
-            return Save();
-        }
-
         public bool Save()
         {
             var saved = _context.SaveChanges();
@@ -103,12 +91,11 @@ namespace EpicSpots.Repository
 
         public async Task<bool> CreateCampsiteAsync(int ownerId, List<int> amenitiesIds, Campsite campsite)
         {
-            // Validate that all amenity IDs exist
             foreach (var amenityId in amenitiesIds)
             {
                 if (!await _context.Amenities.AnyAsync(a => a.Id == amenityId))
                 {
-                    return false; // Or handle as needed, e.g., throw an exception with a descriptive message
+                    return false;
                 }
             }
 
@@ -128,26 +115,6 @@ namespace EpicSpots.Repository
         {
             var campsite = await _context.Campsites.FindAsync(campId);
             return campsite?.Images;
-        }
-
-        public async Task<bool> UpdateCampsiteImageAsync(int campId, string base64Image)
-        {
-            var campsite = await _context.Campsites.FindAsync(campId);
-            if (campsite == null) return false;
-
-            campsite.Images = Convert.FromBase64String(base64Image);
-            _context.Campsites.Update(campsite);
-            return await SaveAsync();
-        }
-
-        public async Task<bool> DeleteCampsiteImageAsync(int campId)
-        {
-            var campsite = await _context.Campsites.FindAsync(campId);
-            if (campsite == null) return false;
-
-            campsite.Images = null;
-            _context.Campsites.Update(campsite);
-            return await SaveAsync();
         }
 
         private async Task<bool> SaveAsync()
@@ -171,7 +138,29 @@ namespace EpicSpots.Repository
             }).ToList();
         }
 
-        public async Task<IEnumerable<CampsiteDTO>> SearchCampsitesWithBase64ImagesAsync(string? location, DateTime? checkin, DateTime? checkout)
+        public async Task<IEnumerable<CampsiteDTO>> GetCampsitesByOwnerWithBase64ImagesAsync(int ownerId)
+        {
+            var campsites = await _context.Campsites
+                .Where(c => c.OwnerId == ownerId)
+                .Include(c => c.CampsiteAmenities)
+                    .ThenInclude(ca => ca.Amenity)
+                .ToListAsync();
+
+            return campsites.Select(campsite => new CampsiteDTO
+            {
+                Id = campsite.Id,
+                Name = campsite.Name,
+                Location = campsite.Location,
+                Description = campsite.Description,
+                PricePerNight = campsite.PricePerNight,
+                AverageRating = Math.Round(GetCampsiteRating(campsite.Id), 2),
+                ImageBase64 = campsite.Images != null ? Convert.ToBase64String(campsite.Images) : null,
+                Amenities = GetCampsiteAmenities(campsite.Id)
+            }).ToList();
+        }
+
+
+        public async Task<IEnumerable<CampsiteDTO>> SearchCampsitesWithBase64ImagesAsync(string? location, DateTime? checkin, DateTime? checkout, decimal? maxPrice)
         {
             var query = _context.Campsites.AsQueryable();
 
@@ -185,13 +174,22 @@ namespace EpicSpots.Repository
                 var checkinDate = checkin.Value.Date;
                 var checkoutDate = checkout.Value.Date;
 
-                var campsiteIds = _context.Bookings
-                    .Where(b => b.EndDate.Date > checkinDate && b.StartDate.Date < checkoutDate)
+                var overlappingBookings = _context.Bookings
+                    .Where(b => b.StartDate < checkoutDate && b.EndDate > checkinDate);
+
+                var bookedCampsiteIds = overlappingBookings
                     .Select(b => b.CampsiteId)
                     .Distinct()
                     .ToList();
 
-                query = query.Where(c => !campsiteIds.Contains(c.Id));
+                Console.WriteLine("Booked Campsite IDs: " + string.Join(", ", bookedCampsiteIds));
+
+                query = query.Where(c => !bookedCampsiteIds.Contains(c.Id));
+            }
+
+            if (maxPrice.HasValue)
+            {
+                query = query.Where(c => c.PricePerNight <= maxPrice.Value);
             }
 
             var campsites = await query
@@ -209,6 +207,24 @@ namespace EpicSpots.Repository
                 ImageBase64 = campsite.Images != null ? Convert.ToBase64String(campsite.Images) : null,
                 Amenities = GetCampsiteAmenities(campsite.Id)
             }).ToList();
+        }
+
+
+        public async Task<bool> UploadCampsiteImageAsync(int campId, string base64Image)
+        {
+            var campsite = await _context.Campsites.FindAsync(campId);
+            if (campsite == null) return false;
+
+            // Data URL Handling (if you expect Data URLs)
+            if (base64Image.StartsWith("data:"))
+            {
+                int commaIndex = base64Image.IndexOf(',');
+                base64Image = base64Image.Substring(commaIndex + 1);
+            }
+
+            campsite.Images = Convert.FromBase64String(base64Image);
+            _context.Campsites.Update(campsite);
+            return await SaveAsync();
         }
 
         public bool AddCampsite(Campsite campsite)

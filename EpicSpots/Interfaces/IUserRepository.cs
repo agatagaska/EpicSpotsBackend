@@ -23,6 +23,8 @@ namespace EpicSpots.Interfaces
 
         IEnumerable<Booking> GetUserBookings(int userId);
 
+        IEnumerable<Campsite> GetCampsitesByOwner(int ownerId);
+
     }
 }
 

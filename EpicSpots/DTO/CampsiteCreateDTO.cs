@@ -9,6 +9,6 @@ namespace EpicSpots.DTO
         public string Location { get; set; }
         public decimal PricePerNight { get; set; }
         public string ImageBase64 { get; set; }
-        public List<int> Amenities { get; set; } // List of amenity IDs
+        public List<int> Amenities { get; set; }
     }
 }

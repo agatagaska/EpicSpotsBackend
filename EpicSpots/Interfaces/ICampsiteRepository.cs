@@ -32,21 +32,15 @@ namespace EpicSpots.Interfaces
 
         bool AddCampsite(Campsite campsite);
 
-        bool UpdateCampsite(int ownerId, List<int> amenitiesIds, Campsite campsite);
-
-        bool DeleteCampsite(Campsite campsite);
-
         bool Save();
 
-        Task<IEnumerable<CampsiteDTO>> SearchCampsitesWithBase64ImagesAsync(string? location, DateTime? checkin, DateTime? checkout);
+        Task<IEnumerable<CampsiteDTO>> SearchCampsitesWithBase64ImagesAsync(string? location, DateTime? checkin, DateTime? checkout, decimal? maxPrice);
 
         // Image handling
         Task<byte[]> GetCampsiteImageAsync(int campId);
 
-        Task<bool> UpdateCampsiteImageAsync(int campId, string base64Image);
-
-        Task<bool> DeleteCampsiteImageAsync(int campId);
-
         Task<IEnumerable<CampsiteDTO>> GetCampsitesWithBase64ImagesAsync();
+
+        Task<IEnumerable<CampsiteDTO>> GetCampsitesByOwnerWithBase64ImagesAsync(int ownerId);
     }
 }

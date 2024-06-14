@@ -225,21 +225,21 @@ namespace EpicSpots.Controllers
         [HttpGet("{userId}/campsites")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<CampsiteDTO>))]
         [ProducesResponseType(400)]
-        public IActionResult GetOwnerCampsites(int userId)
+        public async Task<ActionResult> GetOwnerCampsites(int userId)
         {
             if (!_userRepository.UserExist(userId))
             {
                 return NotFound("User not found");
             }
 
-            var campsites = _mapper.Map<List<CampsiteDTO>>(_campsiteRepository.GetCampsitesByOwner(userId));
+            var campsiteDTOs = await _campsiteRepository.GetCampsitesByOwnerWithBase64ImagesAsync(userId);
 
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            return Ok(campsites);
+            return Ok(campsiteDTOs);
         }
     }
 }
