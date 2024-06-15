@@ -24,33 +24,13 @@ namespace EpicSpots.Repository
             return _context.Campsites.FirstOrDefault(p => p.Id == id);
         }
 
-        public Campsite GetCampsite(string name)
-        {
-            return _context.Campsites.FirstOrDefault(p => p.Name == name);
-        }
-
-        public decimal GetCampsitePricing(int campId)
-        {
-            return _context.Campsites.Where(p => p.Id == campId).Select(p => p.PricePerNight).FirstOrDefault();
-        }
-
         public IEnumerable<Campsite> GetCampsitesByOwner(int ownerId)
         {
             return _context.Campsites
                            .Where(c => c.OwnerId == ownerId)
-                           .Include(c => c.CampsiteAmenities) // Include related entities if necessary
+                           .Include(c => c.CampsiteAmenities)
                            .ThenInclude(ca => ca.Amenity)
                            .ToList();
-        }
-
-        public decimal GetCampsiteRating(int campId)
-        {
-            var review = _context.Reviews.Where(p => p.CampsiteId == campId);
-
-            if (!review.Any())
-                return 0;
-
-            return Math.Round((decimal)review.Sum(r => r.Rating) / review.Count(), 2);
         }
 
         public ICollection<Campsite> GetCampsites()
@@ -77,16 +57,6 @@ namespace EpicSpots.Repository
         {
             var saved = _context.SaveChanges();
             return saved > 0;
-        }
-
-        public Campsite GetCampsiteTrimToUpper(CampsiteDTO campsiteCreate)
-        {
-            return GetCampsites().FirstOrDefault(c => c.Name.Trim().ToUpper() == campsiteCreate.Name.TrimEnd().ToUpper());
-        }
-
-        public Campsite GetCampsiteTrimToUpper(CampsiteCreateDTO campsiteCreate)
-        {
-            return GetCampsites().FirstOrDefault(c => c.Name.Trim().ToUpper() == campsiteCreate.Name.TrimEnd().ToUpper());
         }
 
         public async Task<bool> CreateCampsiteAsync(int ownerId, List<int> amenitiesIds, Campsite campsite)
@@ -132,7 +102,6 @@ namespace EpicSpots.Repository
                 Location = campsite.Location,
                 Description = campsite.Description,
                 PricePerNight = campsite.PricePerNight,
-                AverageRating = Math.Round(GetCampsiteRating(campsite.Id), 2),
                 ImageBase64 = campsite.Images != null ? Convert.ToBase64String(campsite.Images) : null,
                 Amenities = GetCampsiteAmenities(campsite.Id)
             }).ToList();
@@ -153,7 +122,6 @@ namespace EpicSpots.Repository
                 Location = campsite.Location,
                 Description = campsite.Description,
                 PricePerNight = campsite.PricePerNight,
-                AverageRating = Math.Round(GetCampsiteRating(campsite.Id), 2),
                 ImageBase64 = campsite.Images != null ? Convert.ToBase64String(campsite.Images) : null,
                 Amenities = GetCampsiteAmenities(campsite.Id)
             }).ToList();
@@ -203,7 +171,6 @@ namespace EpicSpots.Repository
                 Location = campsite.Location,
                 Description = campsite.Description,
                 PricePerNight = campsite.PricePerNight,
-                AverageRating = Math.Round(GetCampsiteRating(campsite.Id), 2),
                 ImageBase64 = campsite.Images != null ? Convert.ToBase64String(campsite.Images) : null,
                 Amenities = GetCampsiteAmenities(campsite.Id)
             }).ToList();
@@ -227,11 +194,23 @@ namespace EpicSpots.Repository
             return await SaveAsync();
         }
 
-        public bool AddCampsite(Campsite campsite)
+        public async Task<bool> DeleteCampsiteAsync(int campId)
         {
-            _context.Campsites.Add(campsite);
-            return Save();
+            var campsite = await _context.Campsites
+                .Include(c => c.CampsiteAmenities)
+                .FirstOrDefaultAsync(c => c.Id == campId);
+
+            if (campsite == null)
+            {
+                return false;
+            }
+
+            _context.CampsiteAmenities.RemoveRange(campsite.CampsiteAmenities);
+            _context.Campsites.Remove(campsite);
+
+            return await _context.SaveChangesAsync() > 0;
         }
+
     }
 }
 

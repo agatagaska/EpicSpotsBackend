@@ -23,8 +23,6 @@ namespace EpicSpots.Models
 
         public int RoleId { get; set; }
         
-        public ICollection<Review> Reviews { get; set; }
-
         public Role Role { get; set; }
 
         public ICollection<Campsite> Campsites { get; set; }

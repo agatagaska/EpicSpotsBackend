@@ -19,8 +19,6 @@ namespace EpicSpots.Data
 
 		public DbSet<Campsite> Campsites { get; set; }
 
-		public DbSet<Review> Reviews { get; set; }
-
 		public DbSet<User> Users { get; set; }
 
 		public DbSet<Role> Roles { get; set; }
@@ -41,12 +39,6 @@ namespace EpicSpots.Data
                .WithMany(a => a.CampsiteAmenities)
                .HasForeignKey(ac => ac.AmenityId);
 
-            // review user
-			modelBuilder.Entity<Review>()
-				.HasOne(r => r.User)
-				.WithMany(u => u.Reviews)
-				.HasForeignKey(r => r.UserId);
-
             // user role
             modelBuilder.Entity<User>()
                 .HasOne(ur => ur.Role)
@@ -65,10 +57,6 @@ namespace EpicSpots.Data
                     .WithOne(b => b.Campsite)
                     .HasForeignKey(b => b.CampsiteId);
 
-            // Ensure AverageRating has default value
-            modelBuilder.Entity<Campsite>()
-                .Property(c => c.AverageRating)
-                .HasDefaultValue(0.0);
 
             base.OnModelCreating(modelBuilder);
 

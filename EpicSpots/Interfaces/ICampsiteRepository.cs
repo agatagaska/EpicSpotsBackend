@@ -12,27 +12,15 @@ namespace EpicSpots.Interfaces
 
         Campsite GetCampsite(int id);
 
-        Campsite GetCampsite(string name);
-
-        decimal GetCampsiteRating(int campId);
-
-        decimal GetCampsitePricing(int campId);
-
         bool CampsiteExist(int campId);
 
         string GetCampsiteAmenities(int campId);
 
-        Campsite GetCampsiteTrimToUpper(CampsiteDTO campsiteCreate);
-
         IEnumerable<Campsite> GetCampsitesByOwner(int ownerId);
-
-        Campsite GetCampsiteTrimToUpper(CampsiteCreateDTO campsiteCreate);
 
         Task<bool> CreateCampsiteAsync(int ownerId, List<int> amenityIds, Campsite campsite);
 
-        bool AddCampsite(Campsite campsite);
-
-        bool Save();
+        Task<bool> DeleteCampsiteAsync(int campId);
 
         Task<IEnumerable<CampsiteDTO>> SearchCampsitesWithBase64ImagesAsync(string? location, DateTime? checkin, DateTime? checkout, decimal? maxPrice);
 

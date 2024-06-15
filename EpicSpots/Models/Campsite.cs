@@ -16,13 +16,9 @@ namespace EpicSpots.Models
 
         public decimal PricePerNight { get; set; }
 
-        public double AverageRating { get; set; }
-
         // relationships
 
         public ICollection<Booking> Bookings { get; set; }
-
-        public ICollection<Review> Reviews { get; set; }
 
         public byte[] Images { get; set; }
 

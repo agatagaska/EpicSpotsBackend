@@ -29,12 +29,6 @@ namespace EpicSpots.AutoMapper
             CreateMap<User, UserDTO>();
             CreateMap<UserDTO, User>();
 
-            CreateMap<Review, ReviewDTO>();
-            CreateMap<ReviewDTO, Review>();
-
-            CreateMap<Role, RoleDTO>();
-            CreateMap<RoleDTO, Role>();
-
             // Mapping for retrieving bookings with campsite details
             CreateMap<Booking, BookingDTO>()
                 .ForMember(dest => dest.Campsite, opt => opt.MapFrom(src => src.Campsite));

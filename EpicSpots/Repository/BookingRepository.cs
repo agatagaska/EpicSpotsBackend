@@ -26,12 +26,6 @@ namespace EpicSpots.Repository
             return _context.Bookings.Where(p => p.Id == id).FirstOrDefault();
         }
 
-        public string GetBookingStatus(int id)
-        {
-            var status = _context.Bookings.Where(p => p.Id == id).FirstOrDefault();
-            return status != null ? status.BookingStatus : "Not found";
-        }
-
         public ICollection<Booking> GetBookings()
         {
             return _context.Bookings.ToList();

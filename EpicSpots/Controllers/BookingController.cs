@@ -148,32 +148,6 @@ namespace EpicSpots.Controllers
             return NoContent();
         }
 
-
-
-        [HttpPut("{bookingId}")]
-        [ProducesResponseType(204)] 
-        [ProducesResponseType(400)]
-        [ProducesResponseType(404)]
-        public IActionResult UpdateBooking(int bookingId, [FromBody] BookingDTO bookingUpdate)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            if (!_bookingRepository.BookingExist(bookingId))
-                return NotFound();
-
-            var bookingMap = _mapper.Map<Booking>(bookingUpdate);
-            bookingMap.Id = bookingId;
-
-            if (!_bookingRepository.UpdateBooking(bookingMap))
-            {
-                ModelState.AddModelError("", $"Something went wrong while updating booking {bookingId}");
-                return StatusCode(500, ModelState);
-            }
-
-            return NoContent();
-        }
-
     }
 }
 

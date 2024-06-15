@@ -22,19 +22,17 @@ namespace EpicSpots.Controllers
     {
         private readonly ICampsiteRepository _campsiteRepository;
         private readonly IUserRepository _userRepository;
-        private readonly IReviewRepository _reviewRepository;
         private readonly IMapper _mapper;
         private readonly IConfiguration _configuration;
         private readonly CampingDataContext _context;
 
 
-        public CampsiteController(ICampsiteRepository campsiteRepository, IMapper mapper, IConfiguration configuration, IUserRepository userRepository, IReviewRepository reviewRepository, CampingDataContext context)
+        public CampsiteController(ICampsiteRepository campsiteRepository, IMapper mapper, IConfiguration configuration, IUserRepository userRepository, CampingDataContext context)
         {
             _campsiteRepository = campsiteRepository;
             _mapper = mapper;
             _configuration = configuration;
             _userRepository = userRepository;
-            _reviewRepository = reviewRepository;
             _context = context;
         }
 
@@ -74,22 +72,6 @@ namespace EpicSpots.Controllers
             return Ok(campsiteDTO);
         }
 
-        [HttpGet("{campId}/rating")]
-        [ProducesResponseType(200, Type = typeof(decimal))]
-        [ProducesResponseType(400)]
-        public IActionResult GetCampsiteRating(int campId)
-        {
-            if (!_campsiteRepository.CampsiteExist(campId))
-                return NotFound();
-
-            var rating = _campsiteRepository.GetCampsiteRating(campId);
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            return Ok(rating);
-        }
-
         [Authorize]
         [HttpPost("create")]
         public async Task<IActionResult> CreateCampsite([FromBody] CampsiteCreateDTO campsiteCreateDTO)
@@ -120,7 +102,19 @@ namespace EpicSpots.Controllers
                 }
             }
 
+
+            byte[] fileBytes;
+            try
+            {
+                fileBytes = Convert.FromBase64String(campsiteCreateDTO.ImageBase64);
+            }
+            catch (FormatException)
+            {
+                return BadRequest("Invalid image format");
+            }
+
             var campsite = _mapper.Map<Campsite>(campsiteCreateDTO);
+            campsite.Images = fileBytes;
 
             var result = await _campsiteRepository.CreateCampsiteAsync(userId, campsiteCreateDTO.Amenities, campsite);
 
@@ -132,6 +126,27 @@ namespace EpicSpots.Controllers
 
             return CreatedAtAction(nameof(GetCampsite), new { campId = campsite.Id }, campsite);
         }
+
+        [Authorize]
+        [HttpDelete("{campId}")]
+        public async Task<IActionResult> DeleteCampsite(int campId)
+        {
+            if (!_campsiteRepository.CampsiteExist(campId))
+            {
+                return NotFound();
+            }
+
+            var result = await _campsiteRepository.DeleteCampsiteAsync(campId);
+
+            if (!result)
+            {
+                ModelState.AddModelError("", "Something went wrong while deleting");
+                return StatusCode(500, ModelState);
+            }
+
+            return NoContent();
+        }
+
 
         [HttpGet("search")]
         public async Task<IActionResult> SearchCampsites([FromQuery] string? location, [FromQuery] DateTime? checkin, [FromQuery] DateTime? checkout, [FromQuery] decimal? maxPrice)
