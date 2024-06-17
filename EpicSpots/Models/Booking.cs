@@ -20,7 +20,7 @@ namespace EpicSpots.Models
 
         public decimal TotalPrice { get; set; }
 
-        public string BookingStatus { get; set; } = "Pending"; // Pending, Confirmed, Cancelled
+        public string BookingStatus { get; set; } = "Confirmed"; 
 
         public Campsite Campsite { get; set; }
  

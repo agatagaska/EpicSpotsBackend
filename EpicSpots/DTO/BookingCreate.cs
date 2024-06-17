@@ -7,5 +7,5 @@ public class BookingCreateDTO
     public DateTime EndDate { get; set; }
     public int NumberOfGuests { get; set; }
     public decimal TotalPrice { get; set; }
-    public string BookingStatus { get; set; } = "Confirmed"; // Default to Pending
+    public string BookingStatus { get; set; } = "Confirmed"; 
 }

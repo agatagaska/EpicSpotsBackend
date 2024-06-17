@@ -65,12 +65,7 @@ namespace EpicSpots.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            // Log all claims for debugging purposes
             var claims = User.Claims.Select(c => new { c.Type, c.Value }).ToList();
-            foreach (var claim in claims)
-            {
-                Console.WriteLine($"Claim Type: {claim.Type}, Claim Value: {claim.Value}");
-            }
 
             // Extract userId from token claims
             var userIdClaim = User.Claims
@@ -93,6 +88,12 @@ namespace EpicSpots.Controllers
             // Assign the extracted userId to the booking object
             var booking = _mapper.Map<Booking>(bookingCreate);
             booking.UserId = userId;
+
+            if (!_bookingRepository.IsCampsiteAvailable(booking.CampsiteId, booking.StartDate, booking.EndDate))
+            {
+                ModelState.AddModelError("", "Campsite is already booked for the selected dates");
+                return Conflict(ModelState);
+            }
 
             if (!_bookingRepository.CreateBooking(booking))
             {

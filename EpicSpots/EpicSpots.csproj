@@ -43,7 +43,6 @@
     <Folder Include="Interfaces\" />
     <Folder Include="DTO\" />
     <Folder Include="AutoMapper\" />
-    <Folder Include="wwwroot\" />
   </ItemGroup>
   <ItemGroup>
     <Content Remove="wwwroot\" />

@@ -2,7 +2,6 @@
 using EpicSpots.Interfaces;
 using EpicSpots.Repository;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -68,17 +67,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-
 var app = builder.Build();
-
-// Serve static files
-app.UseStaticFiles();
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(
-        Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "dist")),
-    RequestPath = ""
-});
 
 // Configure middleware pipeline
 app.UseRouting();
@@ -101,8 +90,5 @@ app.UseAuthorization();
 
 // Map controllers
 app.MapControllers();
-
-// Fallback to serve the SPA
-app.MapFallbackToFile("index.html");
 
 app.Run();

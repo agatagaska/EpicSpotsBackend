@@ -23,20 +23,6 @@ namespace EpicSpots.Repository
         {
             return _context.Campsites.FirstOrDefault(p => p.Id == id);
         }
-
-        public IEnumerable<Campsite> GetCampsitesByOwner(int ownerId)
-        {
-            return _context.Campsites
-                           .Where(c => c.OwnerId == ownerId)
-                           .Include(c => c.CampsiteAmenities)
-                           .ThenInclude(ca => ca.Amenity)
-                           .ToList();
-        }
-
-        public ICollection<Campsite> GetCampsites()
-        {
-            return _context.Campsites.OrderBy(p => p.Id).ToList();
-        }
         public bool CampsiteExist(int campId)
         {
             return _context.Campsites.Any(p => p.Id == campId);
@@ -79,14 +65,6 @@ namespace EpicSpots.Repository
             _context.Campsites.Add(campsite);
             return await _context.SaveChangesAsync() > 0;
         }
-
-
-        public async Task<byte[]> GetCampsiteImageAsync(int campId)
-        {
-            var campsite = await _context.Campsites.FindAsync(campId);
-            return campsite?.Images;
-        }
-
         private async Task<bool> SaveAsync()
         {
             return await _context.SaveChangesAsync() >= 0;
@@ -126,8 +104,6 @@ namespace EpicSpots.Repository
                 Amenities = GetCampsiteAmenities(campsite.Id)
             }).ToList();
         }
-
-
         public async Task<IEnumerable<CampsiteDTO>> SearchCampsitesWithBase64ImagesAsync(string? location, DateTime? checkin, DateTime? checkout, decimal? maxPrice)
         {
             var query = _context.Campsites.AsQueryable();
@@ -176,24 +152,6 @@ namespace EpicSpots.Repository
             }).ToList();
         }
 
-
-        public async Task<bool> UploadCampsiteImageAsync(int campId, string base64Image)
-        {
-            var campsite = await _context.Campsites.FindAsync(campId);
-            if (campsite == null) return false;
-
-            // Data URL Handling (if you expect Data URLs)
-            if (base64Image.StartsWith("data:"))
-            {
-                int commaIndex = base64Image.IndexOf(',');
-                base64Image = base64Image.Substring(commaIndex + 1);
-            }
-
-            campsite.Images = Convert.FromBase64String(base64Image);
-            _context.Campsites.Update(campsite);
-            return await SaveAsync();
-        }
-
         public async Task<bool> DeleteCampsiteAsync(int campId)
         {
             var campsite = await _context.Campsites
@@ -210,7 +168,6 @@ namespace EpicSpots.Repository
 
             return await _context.SaveChangesAsync() > 0;
         }
-
     }
 }
 

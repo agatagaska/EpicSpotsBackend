@@ -177,28 +177,6 @@ namespace EpicSpots.Controllers
             return NoContent();
         }
 
-        [Authorize]
-        [HttpDelete("{userId}")]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(404)]
-        public IActionResult DeleteUser(int userId)
-        {
-            if (!_userRepository.UserExist(userId))
-            {
-                return NotFound();
-            }
-
-            var user = _userRepository.GetUser(userId);
-
-            if (!_userRepository.DeleteUser(user))
-            {
-                ModelState.AddModelError("", "Something went wrong deleting the user");
-                return StatusCode(500, ModelState);
-            }
-
-            return NoContent();
-        }
 
         [Authorize]
         [HttpGet("{userId}/bookings")]

@@ -37,17 +37,10 @@ namespace EpicSpots.Repository
             return Save();
         }
 
-        public bool UpdateBooking(Booking booking)
-        {
-            _context.Update(booking);
-            return Save();
-        }
-
         public IEnumerable<Booking> GetUserBookings(int userId)
         {
             return _context.Bookings.Where(b => b.UserId == userId).ToList();
         }
-
 
         public bool DeleteBooking(Booking booking)
         {
@@ -58,18 +51,22 @@ namespace EpicSpots.Repository
             }
             catch (Exception ex)
             {
-                // Log the exception details
                 Console.WriteLine($"Exception occurred while deleting booking: {ex.Message}");
                 Console.WriteLine(ex.StackTrace);
                 return false;
             }
         }
 
-
         public bool Save()
         {
             var saved = _context.SaveChanges();
             return saved > 0 ? true : false;
+        }
+
+        public bool IsCampsiteAvailable(int campsiteId, DateTime startDate, DateTime endDate)
+        {
+            return !_context.Bookings.Any(b => b.CampsiteId == campsiteId &&
+                                           ((b.StartDate <= endDate && b.EndDate >= startDate)));
         }
     }
 }
